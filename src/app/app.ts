@@ -34,10 +34,71 @@ export class App {
 	  new Jogador('Maradona', 63, 10, 'MEI', 'maradona.jpg')
 ];
   
-escalados: Jogador[] = [];
 
-  escalar(jogador: Jogador) {
-    this.escalados.push(jogador);
-    console.log("passou o teste");
-  }
+	jogadoresFiltrados: Jogador[] = [...this.Jogadores];
+
+	currentFilter: string = 'ALL';
+
+	public busca: string = '';
+
+	escalados: Jogador[] = [];
+
+	private updateFiltrados(): void {
+		const filter = this.currentFilter && this.currentFilter.toUpperCase() !== 'ALL'
+			? this.currentFilter.toUpperCase()
+			: null;
+
+		this.jogadoresFiltrados = this.Jogadores.filter(j => {
+			const matchesPos = !filter || j.posicao.toUpperCase() === filter;
+			// identifique por nome + numero para evitar remover vários jogadores que compartilham o mesmo número
+			const notEscalado = !this.escalados.some(e => e.numero === j.numero && e.nome === j.nome);
+			return matchesPos && notEscalado;
+		});
+	}
+
+	FiltrarPorPosicao(posicao: string) {
+		this.currentFilter = posicao ? posicao.toUpperCase() : 'ALL';
+		this.updateFiltrados();
+	}
+
+	escalar(jogador: Jogador) {
+
+		// evita duplicados - compara por nome + numero
+		if (!this.escalados.some(e => e.numero === jogador.numero && e.nome === jogador.nome)) {
+			this.escalados.push(jogador);
+		}
+	
+		this.updateFiltrados();
+	}
+
+	RemoveJogador(jogador: Jogador) {
+		// remove com base em nome + numero para não afetar jogadores que compartilham número
+		this.escalados = this.escalados.filter(j => !(j.numero === jogador.numero && j.nome === jogador.nome));
+	
+		this.updateFiltrados();
+	}
+
+	filtrar(valor: string): void {
+		// atualiza campo de busca (útil se quiser exibir/usar em outro lugar)
+		this.busca = valor || '';
+		const busca = this.busca.toLowerCase();
+
+		// aplica busca sobre a lista original, respeitando filtros de posição e jogadores escalados
+		this.jogadoresFiltrados = this.Jogadores.filter(jogador => {
+			const matchesSearch =
+				!busca ||
+				jogador.nome.toLowerCase().includes(busca) ||
+				jogador.posicao.toLowerCase().includes(busca);
+
+			const matchesPos =
+				this.currentFilter && this.currentFilter.toUpperCase() !== 'ALL'
+					? jogador.posicao.toUpperCase() === this.currentFilter
+					: true;
+
+			const notEscalado = !this.escalados.some(e => e.numero === jogador.numero && e.nome === jogador.nome);
+
+			return matchesSearch && matchesPos && notEscalado;
+		});
+	}
+
 }

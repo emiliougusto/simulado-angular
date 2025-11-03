@@ -22,5 +22,6 @@ export class Cards {
 
   Escalar(){
     this.escalar.emit(this.toJogador());
+
   }
 }
